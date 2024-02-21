@@ -27,7 +27,7 @@ xbl.spamhaus.org
 zen.spamhaus.org
 !`
 
-# Put in here your mailservers ips
+# Put in here the IPs to check.
 MSERVIPS=`grep -v ^# <<!
 1.2.3.4
 !`
@@ -46,7 +46,7 @@ MSERVIPS=`grep -v ^# <<!
  done
  done
 
-# Send the results to hobbit so it can be graphed
+# Send the results to hobbit so it can be graphed.
 $BB $BBDISP "status $MACHINE.$COLUMN $COLOR `date`
 
 ${MSG}
