@@ -6,9 +6,9 @@
 #[rblcheck]
 #	DISABLED
 #	ENVFILE /etc/xymon/xymonclient.cfg
-#	CMD /usr/bin/sudo -E -u list $XYMONCLIENTHOME/ext/rblcheck
+#	CMD $XYMONCLIENTHOME/ext/rblcheck
 #	LOGFILE /var/log/xymon/xymonclient.log
-#	INTERVAL 5m
+#	INTERVAL 8h
 
 COLUMN=rblcheck
 COLOR=green
