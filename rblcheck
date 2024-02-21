@@ -1,14 +1,13 @@
 #!/bin/sh
 # /usr/lib/xymon/client/ext/rblcheck
 
-
 # /etc/xymon/clientlaunch.d/rblcheck.cfg
 #[rblcheck]
 #	DISABLED
 #	ENVFILE /etc/xymon/xymonclient.cfg
 #	CMD $XYMONCLIENTHOME/ext/rblcheck
 #	LOGFILE /var/log/xymon/xymonclient.log
-#	INTERVAL 8h
+#	INTERVAL 24h
 
 COLUMN=rblcheck
 COLOR=green
@@ -76,7 +75,6 @@ block.dnsbl.sorbs.net
 bogons.cymru.com
 bsb.spamlookup.net
 cbl.abuseat.org
-cidr.bl.mcafee.com
 cnkr.rbl.polspam.pl
 combined.rbl.msrbl.net
 communicado.fmb.la
@@ -94,10 +92,8 @@ dnsbl.ascams.com
 dnsbl.beetjevreemd.nl
 dnsbl.calivent.com.pe
 dnsbl.cobion.com
-dnsbl.darklist.de
 dnsbl.dronebl.org
 dnsbl.forefront.microsoft.com
-dnsbl.isx.fr
 dnsbl.justspam.org
 dnsbl.kempt.net
 dnsbl.madavi.de
@@ -109,7 +105,6 @@ dnsbl.spfbl.net
 dnsbl.threatint.zone
 dnsbl.tornevall.org
 dnsbl.zapbl.net
-dnsblchile.org
 dnsrbl.swinog.ch
 dnswl.spfbl.net
 dob.sibl.support-intelligence.net
@@ -208,7 +203,6 @@ rbl.iprange.net
 rbl.ircbl.org
 rbl.lugh.ch
 rbl.metunet.com
-rbl.rbldns.ru
 rbl.realtimeblacklist.com
 rbl.schulte.org
 rbl.suresupport.com
