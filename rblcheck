@@ -7,7 +7,8 @@
 #	ENVFILE /etc/xymon/xymonclient.cfg
 #	CMD $XYMONCLIENTHOME/ext/rblcheck
 #	LOGFILE /var/log/xymon/xymonclient.log
-#	INTERVAL 24h
+#	INTERVAL 4h
+#	LIFETIME 8h
 
 COLUMN=rblcheck
 COLOR=green
@@ -27,7 +28,7 @@ xbl.spamhaus.org
 zen.spamhaus.org
 !`
 
-# Put in here the IPs to check.
+# Put in here the IP servers to check.
 MSERVIPS=`grep -v ^# <<!
 1.2.3.4
 !`
