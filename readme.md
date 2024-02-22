@@ -7,9 +7,9 @@
 2.0 Create the file /etc/xymon/clientlaunch.d/rblcheck.cfg and copy this inside:
 
 [rblcheck]
-	#DISABLED
-	ENVFILE /etc/xymon/xymonclient.cfg
-	CMD $XYMONCLIENTHOME/ext/rblcheck
+	#DISABLED\b
+	ENVFILE /etc/xymon/xymonclient.cfg\b
+	CMD $XYMONCLIENTHOME/ext/rblcheck\b
 	LOGFILE /var/log/xymon/xymonclient.log
 	INTERVAL 4h
 
