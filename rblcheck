@@ -1,7 +1,7 @@
 #!/bin/sh
-# /usr/lib/xymon/client/ext/rblcheck
+# File /usr/lib/xymon/client/ext/rblcheck
 
-# /etc/xymon/clientlaunch.d/rblcheck.cfg
+# File /etc/xymon/clientlaunch.d/rblcheck.cfg
 #[rblcheck]
 #	DISABLED
 #	ENVFILE /etc/xymon/xymonclient.cfg
