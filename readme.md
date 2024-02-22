@@ -1,7 +1,5 @@
 # Xymon extension to check RBLs.
 
-xxx
-
 ## Usage
 
 1.0 Copy the file "rblcheck" in /usr/lib/xymon/client/ext/rblcheck
