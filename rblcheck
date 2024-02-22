@@ -18,9 +18,12 @@ DNSBLlist=`grep -v ^# <<!
 all.spamrats.com
 b.barracudacentral.org
 bl.blocklist.de
+bl.score.senderscore.com
 bl.spamcop.net
 bl.spameatingmonkey.net
+cbl.abuseat.org
 dnsbl.sorbs.net
+psbl.surriel.com
 sbl-xbl.spamhaus.org
 sbl.spamhaus.org
 xbl.spamhaus.org
@@ -40,7 +43,7 @@ for i in $DNSBLlist
  	if dig $IP.$i +short | grep -q "^127.0.0."
 	then
 		echo "$e found on $i" >> /tmp/rblcheckfound.lst
-		MSG2=`cat /tmp/rblcheckfound.lst`
+		MSG2=`cat /tmp/rblcheckfound.lst | sort`
 		COLOR=red
  	fi
  	done
