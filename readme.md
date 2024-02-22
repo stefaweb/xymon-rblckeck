@@ -15,4 +15,4 @@
 
 3.0 Add "rblcheck" value in host column.
 
-4.0 Reload xymon-clien t and xymon server.
+4.0 Reload Xymon-client and Xymon server.
