@@ -12,6 +12,7 @@
 COLUMN=rblcheck
 COLOR=green
 MSG="<b>rblcheck status</b><br>"
+
 rm -f /tmp/rblcheckfound.lst
 
 DNSBLlist=`grep -v ^# <<!
