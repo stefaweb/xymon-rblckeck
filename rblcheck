@@ -8,7 +8,6 @@
 #	CMD $XYMONCLIENTHOME/ext/rblcheck
 #	LOGFILE /var/log/xymon/xymonclient.log
 #	INTERVAL 4h
-#	LIFETIME 8h
 
 COLUMN=rblcheck
 COLOR=green
@@ -33,22 +32,23 @@ MSERVIPS=`grep -v ^# <<!
 1.2.3.4
 !`
 
- for i in $DNSBLlist
- do
- for e in $MSERVIPS
- do
- IP=`echo $e | awk 'BEGIN { FS = "." } ; { print $4 "." $3 "." $2 "."$1 }'`
- if dig $IP.$i +short | grep -q "^127.0.0."
- then
- echo "$e found on $i" >> /tmp/rblcheckfound.lst
- MSG2=`cat /tmp/rblcheckfound.lst`
- COLOR=red
- fi
- done
- done
+for i in $DNSBLlist
+	do
+ 	for e in $MSERVIPS
+ 	do
+ 	IP=`echo $e | awk 'BEGIN { FS = "." } ; { print $4 "." $3 "." $2 "."$1 }'`
+ 	if dig $IP.$i +short | grep -q "^127.0.0."
+	then
+		echo "$e found on $i" >> /tmp/rblcheckfound.lst
+		MSG2=`cat /tmp/rblcheckfound.lst`
+		COLOR=red
+ 	fi
+ 	done
+done
 
 # Send the results to hobbit so it can be graphed.
-$BB $BBDISP "status $MACHINE.$COLUMN $COLOR `date`
+# You can adjust status+ time to the right value depending of INTERVAL time.
+$BB $BBDISP "status+8h $MACHINE.$COLUMN $COLOR `date`
 
 ${MSG}
 ${MSG2}
