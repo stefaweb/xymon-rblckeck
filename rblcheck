@@ -15,7 +15,8 @@ MSG="<b>rblcheck status</b><br>"
 
 rm -f /tmp/rblcheckfound.lst
 
-# Put in here the IP servers to check.
+
+# Put in here the list of RBL servers to check.
 DNSBLlist=$(grep -v ^# <<EOF
 all.spamrats.com
 b.barracudacentral.org
@@ -33,6 +34,7 @@ zen.spamhaus.org
 EOF
 )
 
+# Put in here the IP servers to check.
 MSERVIPS=$(grep -v ^# <<EOF
 1.2.3.4
 EOF
@@ -43,7 +45,7 @@ for i in $DNSBLlist; do
         IP=$(echo $e | awk 'BEGIN { FS = "." } ; { print $4 "." $3 "." $2 "."$1 }')
         REVERSE_DNS=$(dig +short -x $e)
         if dig $IP.$i +short | grep -q "^127.0.0."; then
-            # Vérifier si un reverse DNS existe, sinon indiquer "N/A"
+            # Check if a reverse DNS exists, otherwise indicate “N/A”
             if [ -z "$REVERSE_DNS" ]; then
                 REVERSE_DNS="N/A"
             fi
