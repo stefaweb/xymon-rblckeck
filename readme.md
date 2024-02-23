@@ -47,5 +47,3 @@ Or, if your system uses a different service management system, use the appropria
 
 After completing these steps, your Xymon system should start monitoring the specified hosts for RBL listings using the `rblcheck` script.
 ```
-
-Note: Adjust the markdown code blocks as needed, depending on your specific GitHub repository setup. This markdown layout provides a structured way to document the installation and setup process for users.
