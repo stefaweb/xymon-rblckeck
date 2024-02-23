@@ -1,5 +1,3 @@
-
-```markdown
 # Installation Guide for RBLCheck Integration with Xymon
 
 This guide outlines the steps to integrate the `rblcheck` script with your Xymon monitoring system.
