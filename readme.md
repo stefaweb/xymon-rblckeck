@@ -1,4 +1,13 @@
+# Installation Guide for RBLCheck Integration with Xymon
 
+This guide outlines the steps to integrate the `rblcheck` script with your Xymon monitoring system.
+
+## 1.0 Copy the RBLCheck Script
+
+First, you need to place the `rblcheck` script into the Xymon client extensions directory.
+
+```bash
+cp rblcheck /usr/lib/xymon/client/ext/rblcheck
 ```markdown
 # Installation Guide for RBLCheck Integration with Xymon
 
