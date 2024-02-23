@@ -15,7 +15,8 @@ MSG="<b>rblcheck status</b><br>"
 
 rm -f /tmp/rblcheckfound.lst
 
-DNSBLlist=`grep -v ^# <<!
+# Put in here the IP servers to check.
+DNSBLlist=$(grep -v ^# <<EOF
 all.spamrats.com
 b.barracudacentral.org
 bl.blocklist.de
@@ -29,26 +30,34 @@ sbl-xbl.spamhaus.org
 sbl.spamhaus.org
 xbl.spamhaus.org
 zen.spamhaus.org
-!`
+EOF
+)
 
-# Put in here the IP servers to check.
-MSERVIPS=`grep -v ^# <<!
+MSERVIPS=$(grep -v ^# <<EOF
 1.2.3.4
-!`
+EOF
+)
 
-for i in $DNSBLlist
-	do
- 	for e in $MSERVIPS
- 	do
- 	IP=`echo $e | awk 'BEGIN { FS = "." } ; { print $4 "." $3 "." $2 "."$1 }'`
- 	if dig $IP.$i +short | grep -q "^127.0.0."
-	then
-		echo "$e found on $i" >> /tmp/rblcheckfound.lst
-		MSG2=`cat /tmp/rblcheckfound.lst | sort`
-		COLOR=red
- 	fi
- 	done
+for i in $DNSBLlist; do
+    for e in $MSERVIPS; do
+        IP=$(echo $e | awk 'BEGIN { FS = "." } ; { print $4 "." $3 "." $2 "."$1 }')
+        REVERSE_DNS=$(dig +short -x $e)
+        if dig $IP.$i +short | grep -q "^127.0.0."; then
+            # Vérifier si un reverse DNS existe, sinon indiquer "N/A"
+            if [ -z "$REVERSE_DNS" ]; then
+                REVERSE_DNS="N/A"
+            fi
+            echo "$e ($REVERSE_DNS) found on $i" >> /tmp/rblcheckfound.lst
+            COLOR=red
+        fi
+    done
 done
+
+if [ -f /tmp/rblcheckfound.lst ]; then
+    MSG2=$(sort /tmp/rblcheckfound.lst)
+else
+    MSG2="No blacklisted IP found."
+fi
 
 # Send the results to hobbit so it can be graphed.
 # You can adjust status+ time to the right value depending of INTERVAL time.
