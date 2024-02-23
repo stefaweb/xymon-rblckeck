@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 # File /usr/lib/xymon/client/ext/rblcheck
 
 # File /etc/xymon/clientlaunch.d/rblcheck.cfg
@@ -13,12 +13,8 @@ COLUMN=rblcheck
 COLOR=green
 MSG="<b>rblcheck status</b><br>"
 
-rm -f /tmp/rblcheckfound.lst
-
-
-# Put in here the list of RBL servers to check.
-DNSBLlist=$(grep -v ^# <<EOF
-all.spamrats.com
+# Define list of DNSBLs to check against
+DNSBLlist="all.spamrats.com
 b.barracudacentral.org
 bl.blocklist.de
 bl.score.senderscore.com
@@ -30,38 +26,53 @@ psbl.surriel.com
 sbl-xbl.spamhaus.org
 sbl.spamhaus.org
 xbl.spamhaus.org
-zen.spamhaus.org
-EOF
-)
+zen.spamhaus.org"
 
-# Put in here the IP servers to check.
-MSERVIPS=$(grep -v ^# <<EOF
+# Define list of server IPs to check
+MSERVIPS="
 1.2.3.4
-EOF
-)
+"
+
+results_found=false
+temporary_file=$(mktemp)
 
 for i in $DNSBLlist; do
     for e in $MSERVIPS; do
         IP=$(echo $e | awk 'BEGIN { FS = "." } ; { print $4 "." $3 "." $2 "."$1 }')
-        REVERSE_DNS=$(dig +short -x $e)
-        if dig $IP.$i +short | grep -q "^127.0.0."; then
-            # Check if a reverse DNS exists, otherwise indicate “N/A”
+        REVERSE_DNS=$(dig +short -x $e | tr '\n' ' ' | sed 's/ $//')
+        QUERY_RESULT=$(dig $IP.$i +short)
+        if echo "$QUERY_RESULT" | grep -q "^127.0.0."; then
+            results_found=true
+            FOUND="Found on"  # Modification here
+            COLOR=red
+            # Check if reverse DNS exists, otherwise indicate "N/A"
             if [ -z "$REVERSE_DNS" ]; then
                 REVERSE_DNS="N/A"
             fi
-            echo "$e ($REVERSE_DNS) found on $i" >> /tmp/rblcheckfound.lst
-            COLOR=red
+            echo -e "$e\t$REVERSE_DNS\t$FOUND\t$i" >> $temporary_file
         fi
     done
 done
 
-if [ -f /tmp/rblcheckfound.lst ]; then
-    MSG2=$(sort /tmp/rblcheckfound.lst)
+# Process results
+if [ "$results_found" = true ]; then
+    # If results were found, rename temporary file to the final output file
+    mv $temporary_file /tmp/rblcheckfound.lst
+
+    # Generate the HTML table from the results
+    MSG2="<table border=\"1\" style=\"border-collapse: collapse;\"><tr><th style=\"padding: 8px;\">Tested IP</th><th style=\"padding: 8px;\">Reverse DNS</th><th style=\"padding: 8px;\">Status</th><th style=\"padding: 8px;\">RBL List</th></tr>"
+    while IFS=$'\t' read -r ip reverse status rbl; do
+        MSG2+="<tr><td style=\"padding: 8px;\">$ip</td><td style=\"padding: 8px;\">$reverse</td><td style=\"padding: 8px;\">$status</td><td style=\"padding: 8px;\">$rbl</td></tr>"
+    done < /tmp/rblcheckfound.lst
+    MSG2+="</table>"
 else
+    # If no results were found, generate a simple message instead of a table
     MSG2="No blacklisted IP found."
+    # Remove the temporary file as it's not needed
+    rm $temporary_file
 fi
 
-# Send the results to hobbit so it can be graphed.
+# Send the results to Xymon server so it can be graphed.
 # You can adjust status+ time to the right value depending of INTERVAL time.
 $BB $BBDISP "status+8h $MACHINE.$COLUMN $COLOR `date`
 
