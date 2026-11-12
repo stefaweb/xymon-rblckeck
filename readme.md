@@ -1,49 +1,39 @@
-# Installation Guide for RBLCheck Integration with Xymon
+# RBLCheck for Xymon
 
-This guide outlines the steps to integrate the `rblcheck` script with your Xymon monitoring system.
+RBLCheck checks IPv4 addresses against DNS blocklists and reports the results in the Xymon `rblcheck` column.
 
-## 1.0 Copy the RBLCheck Script
+## Install on Debian
 
-First, you need to place the `rblcheck` script into the Xymon client extensions directory.
+1. Install the `bind9-dnsutils` package if `dig` is unavailable.
+2. Edit the `ips` array in `rblcheck` and replace the example address with the public IPv4 addresses to monitor.
+3. Install the script as an executable Xymon client extension:
 
-```bash
-cp rblcheck /usr/lib/xymon/client/ext/rblcheck
-```
+   ```bash
+   sudo install -m 0755 rblcheck /usr/lib/xymon/client/ext/rblcheck
+   ```
 
-## 2.0 Configure the Client Launch Settings
+4. Create `/etc/xymon/clientlaunch.d/rblcheck.cfg`:
 
-Create a new configuration file for `rblcheck` under the Xymon client launch configurations.
+   ```ini
+   [rblcheck]
+   ENVFILE /etc/xymon/xymonclient.cfg
+   CMD $XYMONCLIENTHOME/ext/rblcheck
+   LOGFILE /var/log/xymon/xymonclient.log
+   INTERVAL 4h
+   ```
 
-1. Create the file `/etc/xymon/clientlaunch.d/rblcheck.cfg`.
-2. Insert the following configuration:
+   Make sure the active Xymon launcher includes the task file. The column appears on the reporting host after Xymon receives the first status. Each status is valid for eight hours.
 
-```ini
-[rblcheck]
-#DISABLED
-ENVFILE /etc/xymon/xymonclient.cfg
-CMD $XYMONCLIENTHOME/ext/rblcheck
-LOGFILE /var/log/xymon/xymonclient.log
-INTERVAL 4h
-```
-
-## 3.0 Update Xymon Host Configuration
-
-Add the `rblcheck` column to the hosts you wish to monitor for RBL listings. This is usually done in the Xymon hosts configuration file.
-
-## 4.0 Reload Xymon Services
-
-For the changes to take effect, you need to reload both the Xymon client and the Xymon server services.
-
-Depending on your system, this can typically be done with commands like:
+Preview the report under the Xymon account without publishing it:
 
 ```bash
-systemctl restart xymon-client
-systemctl restart xymon-server
+sudo -u xymon /usr/lib/xymon/client/ext/rblcheck --stdout
 ```
 
-Or, if your system uses a different service management system, use the appropriate commands to restart the Xymon client and server.
+## Read the report
 
----
+- **Green** means every check on the enabled lists completed without a listing.
+- **Yellow** means a check was inconclusive or a provider failed its self-test, with no confirmed listing.
+- **Red** means at least one listing was confirmed. The **Delisting** column links to the provider's lookup or removal page.
 
-After completing these steps, your Xymon system should start monitoring the specified hosts for RBL listings using the `rblcheck` script.
-
+Sender Score and SpamRATS are optional. To enable Sender Score, register the resolver used by Xymon with Validity and set `RBLCHECK_SENDERSCORE=1` in the task environment. To enable SpamRATS, configure a resolver that meets SpamRATS requirements and set `RBLCHECK_SPAMRATS_KEY` in that environment. Keep the key out of the repository.

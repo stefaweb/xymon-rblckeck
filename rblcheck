@@ -1,83 +1,201 @@
 #!/bin/bash
-# File /usr/lib/xymon/client/ext/rblcheck
 
-# File /etc/xymon/clientlaunch.d/rblcheck.cfg
-#[rblcheck]
-#	DISABLED
-#	ENVFILE /etc/xymon/xymonclient.cfg
-#	CMD $XYMONCLIENTHOME/ext/rblcheck
-#	LOGFILE /var/log/xymon/xymonclient.log
-#	INTERVAL 4h
+# Version: 1.2.1
+# Release date: 2026-11-12
+# Xymon client extension. Run with --stdout to preview the status without sending it.
+export LC_ALL=C
 
-COLUMN=rblcheck
-COLOR=green
-MSG="<b>rblcheck status</b><br>"
+# Replace this documentation address with the public IPv4 addresses to monitor.
+ips=(
+    192.0.2.10
+)
+zones=(
+    b.barracudacentral.org bl.blocklist.de bl.spamcop.net
+    bl.spameatingmonkey.net psbl.surriel.com zen.spamhaus.org
+)
 
-# Define list of DNSBLs to check against
-DNSBLlist="all.spamrats.com
-b.barracudacentral.org
-bl.blocklist.de
-bl.score.senderscore.com
-bl.spamcop.net
-bl.spameatingmonkey.net
-cbl.abuseat.org
-dnsbl.sorbs.net
-psbl.surriel.com
-sbl-xbl.spamhaus.org
-sbl.spamhaus.org
-xbl.spamhaus.org
-zen.spamhaus.org"
+preview=false
+case "${1:-}" in
+    '') ;;
+    --stdout) preview=true ;;
+    *) printf 'Usage: %s [--stdout]\n' "$0" >&2; exit 2 ;;
+esac
 
-# Define list of server IPs to check
-MSERVIPS="
-1.2.3.4
-"
-
-results_found=false
-temporary_file=$(mktemp)
-
-for i in $DNSBLlist; do
-    for e in $MSERVIPS; do
-        IP=$(echo $e | awk 'BEGIN { FS = "." } ; { print $4 "." $3 "." $2 "."$1 }')
-        REVERSE_DNS=$(dig +short -x $e | tr '\n' ' ' | sed 's/ $//')
-        QUERY_RESULT=$(dig $IP.$i +short)
-        if echo "$QUERY_RESULT" | grep -q "^127.0.0."; then
-            results_found=true
-            FOUND="Found on"  # Modification here
-            COLOR=red
-            # Check if reverse DNS exists, otherwise indicate "N/A"
-            if [ -z "$REVERSE_DNS" ]; then
-                REVERSE_DNS="N/A"
-            fi
-            echo -e "$e\t$REVERSE_DNS\t$FOUND\t$i" >> $temporary_file
-        fi
-    done
-done
-
-# Process results
-if [ "$results_found" = true ]; then
-    # If results were found, rename temporary file to the final output file
-    mv $temporary_file /tmp/rblcheckfound.lst
-
-    # Generate the HTML table from the results
-    MSG2="<table border=\"1\" style=\"border-collapse: collapse;\"><tr><th style=\"padding: 8px;\">Tested IP</th><th style=\"padding: 8px;\">Reverse DNS</th><th style=\"padding: 8px;\">Status</th><th style=\"padding: 8px;\">RBL List</th></tr>"
-    while IFS=$'\t' read -r ip reverse status rbl; do
-        MSG2+="<tr><td style=\"padding: 8px;\">$ip</td><td style=\"padding: 8px;\">$reverse</td><td style=\"padding: 8px;\">$status</td><td style=\"padding: 8px;\">$rbl</td></tr>"
-    done < /tmp/rblcheckfound.lst
-    MSG2+="</table>"
-else
-    # If no results were found, generate a simple message instead of a table
-    MSG2="No blacklisted IP found."
-    # Remove the temporary file as it's not needed
-    rm $temporary_file
+sender=${XYMON:-${BB:-}}
+server=${XYMSRV:-${BBDISP:-}}
+machine=${MACHINE:-}
+if "$preview"; then
+    machine=${machine:-localhost}
+elif [[ -z $sender || -z $server || -z $machine ]]; then
+    printf 'Missing Xymon client environment (XYMON/XYMSRV/MACHINE).\n' >&2
+    exit 2
 fi
 
-# Send the results to Xymon server so it can be graphed.
-# You can adjust status+ time to the right value depending of INTERVAL time.
-$BB $BBDISP "status+8h $MACHINE.$COLUMN $COLOR `date`
+html_escape() {
+    printf '%s' "$1" | sed 's/\&/\&amp;/g; s/</\&lt;/g; s/>/\&gt;/g'
+}
 
-${MSG}
-${MSG2}
-"
+# 0 = listed, 1 = NXDOMAIN, 2 = inconclusive. Detail is returned in dns_detail.
+query_dnsbl() {
+    local name=$1 codes=$2 reply rc header answers address
+    local listed=0 unexpected=0
+    local status_pattern='status: ([A-Z0-9]+),'
+    if reply=$(dig -r +time=2 +tries=1 +noall +comments +answer "$name" A 2>&1); then
+        header=$(awk '/^;; ->>HEADER<<-/ { print; exit }' <<< "$reply")
+    else
+        rc=$?
+        dns_detail="dig exit $rc"
+        return 2
+    fi
 
-exit 0
+    if [[ ! $header =~ $status_pattern ]]; then
+        dns_detail='Missing DNS status'
+        return 2
+    fi
+
+    dns_detail=${BASH_REMATCH[1]}
+    case "$dns_detail" in
+        NXDOMAIN) return 1 ;;
+        NOERROR) ;;
+        *) return 2 ;;
+    esac
+
+    answers=$(awk '$1 !~ /^;/ && $3 == "IN" && $4 == "A" { print $5 }' <<< "$reply")
+    if [[ -z $answers ]]; then
+        dns_detail='NOERROR without an A record'
+        return 2
+    fi
+
+    while IFS= read -r address; do
+        if [[ $address =~ ^127\.0\.0\.($codes)$ ]]; then
+            listed=1
+        else
+            unexpected=1
+        fi
+    done <<< "$answers"
+    dns_detail=${answers//$'\n'/, }
+    if (( unexpected )); then
+        dns_detail="Response includes an undocumented code: $dns_detail"
+    fi
+    if (( listed )); then
+        return 0
+    fi
+    return 2
+}
+
+listed=0
+clear=0
+indeterminate=0
+skipped=0
+rows=''
+notes=''
+ptr_cache=()
+
+add_row() {
+    local ip=$1 ptr=$2 zone=$3 result=$4 detail=$5 url='' link='&mdash;'
+    if [[ $result == Listed ]]; then
+        case "$zone" in
+            zen.spamhaus.org) url="https://check.spamhaus.org/query/ip/$ip" ;;
+            b.barracudacentral.org) url='https://www.barracudacentral.org/rbl/removal-request' ;;
+            bl.blocklist.de) url="https://www.blocklist.de/en/delist.html?ip=$ip" ;;
+            bl.spamcop.net) url="https://bl.spamcop.net/bl.shtml?$ip" ;;
+            bl.spameatingmonkey.net) url='https://spameatingmonkey.com/lookup' ;;
+            psbl.surriel.com) url='https://www.psbl.org/' ;;
+            bl.score.senderscore.com) url='https://senderscore.org/act/blocklist-remover/' ;;
+            all.spamrats.com) url='https://www.spamrats.com/removal.php' ;;
+        esac
+        if [[ -n $url ]]; then
+            link="<a href=\"$url\">Check / delist</a>"
+        fi
+    fi
+    rows+="<tr><td>$ip</td><td>$(html_escape "$ptr")</td><td>$zone</td><td>$result</td><td>$(html_escape "$detail")</td><td>$link</td></tr>"$'\n'
+}
+
+if [[ ${RBLCHECK_SENDERSCORE:-0} == 1 ]]; then
+    zones+=(bl.score.senderscore.com)
+fi
+
+if [[ ${RBLCHECK_SPAMRATS_KEY:-} =~ ^[A-Za-z0-9]([A-Za-z0-9-]{0,61}[A-Za-z0-9])?$ ]]; then
+    zones+=(all.spamrats.com)
+elif [[ -n ${RBLCHECK_SPAMRATS_KEY:-} ]]; then
+    notes+='<p>SpamRATS key is invalid.</p>'
+    ((skipped += ${#ips[@]}))
+fi
+
+if ! command -v dig >/dev/null; then
+    ((skipped += ${#ips[@]} * ${#zones[@]}))
+    notes+='<p>dig is unavailable. On Debian, install bind9-dnsutils.</p>'
+else
+    for zone in "${zones[@]}"; do
+        query_zone=$zone
+        positive_test=2
+        case "$zone" in
+            zen.spamhaus.org) codes='2|3|4|9|10|11' ;;
+            bl.blocklist.de) codes='[2-9]|1[0-9]|2[0-2]' ;;
+            bl.score.senderscore.com) codes='[1-8]|10|11|14|15|16|18|20|22|23|24|26|28|30' ;;
+            all.spamrats.com)
+                codes='36|37|38|43'
+                positive_test=36
+                query_zone="${RBLCHECK_SPAMRATS_KEY}.$zone"
+                ;;
+            *) codes='2' ;;
+        esac
+
+        if ! query_dnsbl "$positive_test.0.0.127.$query_zone." "$codes"; then
+            add_row '-' '-' "$zone" 'Positive test failed' "$dns_detail"
+            ((skipped += ${#ips[@]}))
+            continue
+        fi
+        query_dnsbl "1.0.0.127.$query_zone." "$codes"
+        if [[ $? != 1 ]]; then
+            add_row '-' '-' "$zone" 'Negative test failed' "$dns_detail"
+            ((skipped += ${#ips[@]}))
+            continue
+        fi
+
+        for index in "${!ips[@]}"; do
+            ip=${ips[$index]}
+            IFS=. read -r a b c d <<< "$ip"
+            query_dnsbl "$d.$c.$b.$a.$query_zone." "$codes"
+            case $? in
+                0)
+                    ((listed += 1))
+                    if [[ ! ${ptr_cache[$index]+cached} ]]; then
+                        ptr=$(dig -r +time=2 +tries=1 +short -x "$ip" 2>/dev/null) || ptr=''
+                        ptr_cache[$index]=${ptr//$'\n'/, }
+                    fi
+                    add_row "$ip" "${ptr_cache[$index]:-N/A}" "$zone" 'Listed' "$dns_detail"
+                    ;;
+                1) ((clear += 1)) ;;
+                *)
+                    ((indeterminate += 1))
+                    add_row "$ip" '-' "$zone" 'Inconclusive' "$dns_detail"
+                    ;;
+            esac
+        done
+    done
+fi
+
+color=green
+if (( listed )); then
+    color=red
+elif (( indeterminate || skipped )); then
+    color=yellow
+fi
+
+message="status+8h $machine.rblcheck $color $(date)
+
+<p>DNSBL checks: $listed listed, $clear clear, $indeterminate inconclusive, $skipped skipped.</p>
+$notes"
+if [[ -n $rows ]]; then
+    message+="
+<table border=\"1\" cellpadding=\"4\">
+<tr><th>IP</th><th>PTR</th><th>DNSBL</th><th>Result</th><th>DNS response</th><th>Delisting</th></tr>
+$rows</table>"
+fi
+
+if "$preview"; then
+    printf '%s\n' "$message"
+else
+    "$sender" "$server" "$message"
+fi
