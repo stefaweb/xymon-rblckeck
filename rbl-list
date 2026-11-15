@@ -15,12 +15,10 @@ all.spamrats.com
 all.v6.ascc.dnsbl.bit.nl
 asn.routeviews.org
 aspath.routeviews.org
-aspews.ext.sorbs.net
 auth.spamrats.com
 b.barracudacentral.org
 backscatter.spameatingmonkey.net
 bad.virusfree.cz
-badconf.rhsbl.sorbs.net
 bb.barracudacentral.org
 bip.virusfree.cz
 bitonly.dnsbl.bit.nl
@@ -55,10 +53,8 @@ black.uribl.com
 blacklist.sci.kun.nl
 blacklist.woody.ch
 block.ascams.com
-block.dnsbl.sorbs.net
 bogons.cymru.com
 bsb.spamlookup.net
-cbl.abuseat.org
 cnkr.rbl.polspam.pl
 combined.rbl.msrbl.net
 communicado.fmb.la
@@ -84,7 +80,6 @@ dnsbl.madavi.de
 dnsbl.net.ua
 dnsbl.rv-soft.info
 dnsbl.rymsho.ru
-dnsbl.sorbs.net
 dnsbl.spfbl.net
 dnsbl.threatint.zone
 dnsbl.tornevall.org
@@ -92,12 +87,10 @@ dnsbl.zapbl.net
 dnsrbl.swinog.ch
 dnswl.spfbl.net
 dob.sibl.support-intelligence.net
-dul.dnsbl.sorbs.net
 dwl.dnswl.org
 dyn.nszones.com
 dyn.rbl.polspam.pl
 dyna.spamrats.com
-escalations.dnsbl.sorbs.net
 eswlrev.dnsbl.rediris.es
 fnrbl.fast.net
 forbidden.icm.edu.pl
@@ -112,7 +105,6 @@ gl.suomispam.net
 grey.uribl.com
 hil.habeas.com
 hostkarma.junkemailfilter.com
-http.dnsbl.sorbs.net
 hul.habeas.com
 iadb.isipp.com
 iadb2.isipp.com
@@ -131,10 +123,6 @@ ispmx.pofon.foobar.hu
 ix.dnsbl.manitu.net
 korea.services.net
 krn.korumail.com
-l1.bbfh.ext.sorbs.net
-l2.bbfh.ext.sorbs.net
-l3.bbfh.ext.sorbs.net
-l4.bbfh.ext.sorbs.net
 lblip4.rbl.polspam.pl
 lblip6.rbl.polspam.pl
 light.dnsbl.brukalai.lt
@@ -142,7 +130,6 @@ list.bbfh.org
 list.dnswl.org
 mail-abuse.blacklist.jippg.org
 mailsl.dnsbl.rjek.com
-misc.dnsbl.sorbs.net
 mtawlrev.dnsbl.rediris.es
 multi.surbl.org
 multi.uribl.com
@@ -150,14 +137,11 @@ nbl.0spam.org
 netbl.spameatingmonkey.net
 netblockbl.spamgrouper.to
 netscan.rbl.blockedservers.com
-new.spam.dnsbl.sorbs.net
 niprbl.mailcleaner.net
 nobl.junkemailfilter.com
-nomail.rhsbl.sorbs.net
 noptr.spamrats.com
 nsbl.fmb.la
 nuribl.mailcleaner.net
-old.spam.dnsbl.sorbs.net
 openproxy.bls.digibase.ca
 origin.asn.cymru.com
 origin.asn.spameatingmonkey.net
@@ -168,8 +152,6 @@ peer.asn.cymru.com
 phishing.rbl.msrbl.net
 plus.bondedsender.org
 pofon.foobar.hu
-problems.dnsbl.sorbs.net
-proxies.dnsbl.sorbs.net
 proxyabuse.bls.digibase.ca
 psbl.surriel.com
 public.sarbl.org
@@ -193,10 +175,8 @@ rbl.suresupport.com
 rbl2.triumf.ca
 rblip4.rbl.polspam.pl
 rblip6.rbl.polspam.pl
-recent.spam.dnsbl.sorbs.net
 red.uribl.com
 relays.bl.kundenserver.de
-relays.dnsbl.sorbs.net
 relays.nether.net
 rep.mailspike.net
 reputation-domain.rbl.scrolloutf1.com
@@ -207,14 +187,12 @@ rhsbl-h.rbl.polspam.pl
 rhsbl.rbl.polspam.pl
 rhsbl.rymsho.ru
 rhsbl.scientificspam.net
-rhsbl.sorbs.net
 rhsbl.zapbl.net
 rsbl.aupads.org
 sa-accredit.habeas.com
 sa.fmb.la
 sa.senderbase.org
 safe.dnsbl.prs.proofpoint.com
-safe.dnsbl.sorbs.net
 sbl-xbl.spamhaus.org
 sbl.nszones.com
 sbl.spamdown.org
@@ -224,11 +202,8 @@ score.senderscore.com
 score.spfbl.net
 short.fmb.la
 singular.ttk.pte.hu
-smtp.dnsbl.sorbs.net
-socks.dnsbl.sorbs.net
 sohul.habeas.com
 spam.dnsbl.anonmails.de
-spam.dnsbl.sorbs.net
 spam.pedantic.org
 spam.rbl.blockedservers.com
 spam.rbl.msrbl.net
@@ -267,7 +242,6 @@ vote.drbl.caravan.ru
 vote.drbl.gremlin.ru
 wadb.isipp.com
 wbl.triumf.ca
-web.dnsbl.sorbs.net
 web.rbl.msrbl.net
 white.dnsbl.brukalai.lt
 white.uribl.com
@@ -283,4 +257,3 @@ worms-bl.kundenserver.de
 xbl.spamhaus.org
 z.mailspike.net
 zen.spamhaus.org
-zombie.dnsbl.sorbs.net
